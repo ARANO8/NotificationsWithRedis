@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificaciones en Tiempo Real</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Enviar Notificación</h1>
+    <input type="text" id="mensaje" placeholder="Escribe tu mensaje...">
+    <button onclick="enviarMensaje()">Enviar</button>
+    
+    <h2>Notificaciones Recibidas</h2>
+    <ul id="notificaciones"></ul>
+
+    <!-- Agregar un enlace o botón para ver los mensajes almacenados en Redis -->
+    <br><br>
+    <a href="/messages"><button>Ver Mensajes Almacenados</button></a>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        // Conectar al servidor de WebSocket
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Escuchar el evento 'new_message' para recibir mensajes
+        socket.on('new_message', function(message) {
+            console.log("Mensaje recibido:", message);  // Verificación en consola
+            var notification = document.createElement('li');
+            notification.textContent = message;  // Mostrar el mensaje real recibido
+            document.getElementById("notificaciones").appendChild(notification);
+        });
+
+        function enviarMensaje() {
+            // Obtener el mensaje del input
+            const mensaje = $("#mensaje").val();
+
+            // Verificar que el mensaje no esté vacío
+            if (mensaje.trim() === "") {
+                alert("Por favor, ingrese un mensaje.");
+                return;
+            }
+
+            // Realizar la petición AJAX al servidor
+            $.ajax({
+                url: "/send",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ "message": mensaje }),
+                success: function(response) {
+                    console.log("Notificación enviada:", response);  // Verificación de respuesta
+                    $("#mensaje").val('');  // Limpiar el campo de entrada
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error al enviar la notificación:", error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
