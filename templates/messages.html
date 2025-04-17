@@ -4,45 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mensajes en Redis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Mensajes Almacenados en Redis</h1>
-    <ul id="messages-list">
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% else %}
-            <li>No hay mensajes almacenados.</li>
-        {% endfor %}
-    </ul>
+    <h1>Notificaciones Recibidas</h1>
+    <ul id="notificaciones"></ul>
 
     <br>
     <a href="/">Volver a la página principal</a>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
     <script>
-        // Función para actualizar los mensajes cada segundo
-        function actualizarMensajes() {
-            $.ajax({
-                url: "/messages",  // Ruta para obtener los mensajes
-                type: "GET",
-                success: function(data) {
-                    // Extraemos el contenido actualizado de la lista de mensajes
-                    var newMessages = $(data).find('#messages-list').html();  // Obtener solo el contenido de la lista
-                    var oldMessages = $('#messages-list').html();  // Obtener los mensajes actuales en la página
-                    
-                    // Si los mensajes son diferentes, actualizamos la lista
-                    if (newMessages !== oldMessages) {
-                        $('#messages-list').html(newMessages);  // Actualizamos la lista con los nuevos mensajes
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error al obtener los mensajes:", error);
-                }
-            });
-        }
+        // Conectar al servidor de WebSocket
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-        // Actualizar los mensajes cada 1000 ms (1 segundo)
-        setInterval(actualizarMensajes, 1000);  // Actualización cada 1 segundo
+        // Escuchar el evento 'new_message' para recibir mensajes
+        socket.on('new_message', function(message) {
+            console.log("Mensaje recibido:", message);  // Verificación en consola
+            var notification = document.createElement('li');
+            notification.textContent = message;  // Mostrar el mensaje real recibido
+            document.getElementById("notificaciones").appendChild(notification);
+        });
+
     </script>
 </body>
 </html>
