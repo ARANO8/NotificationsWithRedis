@@ -22,9 +22,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
     <script>
-      const socket = io.connect(
-        "http://" + document.domain + ":" + location.port
-      );
+      const socket = io.connect(window.location.origin);
 
       socket.on("new_message", function (message) {
         console.log("Mensaje recibido:", message);

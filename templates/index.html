@@ -25,8 +25,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
     <script>
-        // Conectar al servidor de WebSocket
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        // Conectar al servidor de WebSocket usando el origen actual
+        var socket = io.connect(window.location.origin);
 
 
         function enviarMensajeLista() {
