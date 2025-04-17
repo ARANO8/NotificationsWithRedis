@@ -9,10 +9,14 @@
 <body>
     <h1>Enviar Notificación</h1>
     <input type="text" id="mensaje" placeholder="Escribe tu mensaje...">
-    <button onclick="enviarMensaje()">Enviar</button>
+    <button onclick="enviarMensajeLista()">Enviar a Lista</button>
+
+    <!-- Nuevo formulario para enviar notificaciones con prioridad -->
+    <h2>Enviar Notificación con Prioridad</h2>
+    <input type="text" id="mensaje_prioridad" placeholder="Escribe tu mensaje con prioridad...">
+    <input type="number" id="prioridad" placeholder="Prioridad (1-10)">
+    <button onclick="enviarMensajeConPrioridad()">Enviar</button>
     
-    <h2>Notificaciones Recibidas</h2>
-    <ul id="notificaciones"></ul>
 
     <!-- Agregar un enlace o botón para ver los mensajes almacenados en Redis -->
     <br><br>
@@ -24,38 +28,54 @@
         // Conectar al servidor de WebSocket
         var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-        // Escuchar el evento 'new_message' para recibir mensajes
-        socket.on('new_message', function(message) {
-            console.log("Mensaje recibido:", message);  // Verificación en consola
-            var notification = document.createElement('li');
-            notification.textContent = message;  // Mostrar el mensaje real recibido
-            document.getElementById("notificaciones").appendChild(notification);
-        });
 
-        function enviarMensaje() {
-            // Obtener el mensaje del input
-            const mensaje = $("#mensaje").val();
+        function enviarMensajeLista() {
+            const mensaje = document.getElementById("mensaje").value;
 
-            // Verificar que el mensaje no esté vacío
             if (mensaje.trim() === "") {
                 alert("Por favor, ingrese un mensaje.");
                 return;
             }
 
-            // Realizar la petición AJAX al servidor
-            $.ajax({
-                url: "/send",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({ "message": mensaje }),
-                success: function(response) {
-                    console.log("Notificación enviada:", response);  // Verificación de respuesta
-                    $("#mensaje").val('');  // Limpiar el campo de entrada
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error al enviar la notificación:", error);
-                }
-            });
+            fetch("/send_normal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: mensaje })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Mensaje enviado a la lista:", data);
+                document.getElementById("mensaje").value = "";
+            })
+            .catch(error => console.error("Error al enviar el mensaje a la lista:", error));
+        }
+
+        function enviarMensajeConPrioridad() {
+            const mensaje = document.getElementById("mensaje_prioridad").value;
+            const prioridad = document.getElementById("prioridad").value;
+
+            if (mensaje.trim() === "") {
+                alert("Por favor, ingrese un mensaje.");
+                return;
+            }
+
+            if (prioridad.trim() === "" || isNaN(prioridad) || prioridad < 1 || prioridad > 10) {
+                alert("Por favor, ingrese una prioridad válida (1-10).");
+                return;
+            }
+
+            fetch("/send_priority", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: mensaje, priority: parseInt(prioridad) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Mensaje enviado con prioridad:", data);
+                document.getElementById("mensaje_prioridad").value = "";
+                document.getElementById("prioridad").value = "";
+            })
+            .catch(error => console.error("Error al enviar el mensaje con prioridad:", error));
         }
     </script>
 </body>

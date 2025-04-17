@@ -1,32 +1,91 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mensajes en Redis</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
+  </head>
+  <body>
     <h1>Notificaciones Recibidas</h1>
     <ul id="notificaciones"></ul>
 
-    <br>
+    <!-- Explicación de las prioridades y sus colores -->
+    <h2>Prioridades y Colores</h2>
+    <p><span style="color: red">Prioridad Alta (1-3): Rojo</span></p>
+    <p><span style="color: orange">Prioridad Media (4-7): Naranja</span></p>
+    <p><span style="color: green">Prioridad Baja (8-10): Verde</span></p>
+
+    <br />
     <a href="/">Volver a la página principal</a>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
     <script>
-        // Conectar al servidor de WebSocket
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+      const socket = io.connect(
+        "http://" + document.domain + ":" + location.port
+      );
 
-        // Escuchar el evento 'new_message' para recibir mensajes
-        socket.on('new_message', function(message) {
-            console.log("Mensaje recibido:", message);  // Verificación en consola
-            var notification = document.createElement('li');
-            notification.textContent = message;  // Mostrar el mensaje real recibido
-            document.getElementById("notificaciones").appendChild(notification);
-        });
+      socket.on("new_message", function (message) {
+        console.log("Mensaje recibido:", message);
+        const notificaciones = document.getElementById("notificaciones");
 
+        let mensajeTexto = "";
+        let prioridad = null;
+
+        // Si el mensaje es objeto con prioridad (estructura JSON)
+        if (
+          typeof message === "object" &&
+          message.mensaje &&
+          message.prioridad !== undefined
+        ) {
+          mensajeTexto = `${message.mensaje} (Prioridad: ${message.prioridad})`;
+          prioridad = parseInt(message.prioridad);
+        } else {
+          // Mensaje plano (fallback)
+          mensajeTexto = message;
+        }
+
+        const notification = document.createElement("li");
+        notification.textContent = mensajeTexto;
+
+        // Asignar color si hay prioridad
+        if (prioridad !== null) {
+          if (prioridad <= 3) {
+            notification.style.color = "red";
+          } else if (prioridad <= 7) {
+            notification.style.color = "orange";
+          } else {
+            notification.style.color = "green";
+          }
+
+          // Insertar ordenadamente según prioridad
+          let inserted = false;
+          for (let i = 0; i < notificaciones.children.length; i++) {
+            const li = notificaciones.children[i];
+            const match = li.textContent.match(/\(Prioridad: (\d+)\)/);
+            if (match) {
+              const prioridadExistente = parseInt(match[1]);
+              if (prioridad < prioridadExistente) {
+                notificaciones.insertBefore(notification, li);
+                inserted = true;
+                break;
+              }
+            } else {
+              notificaciones.insertBefore(notification, li);
+              inserted = true;
+              break;
+            }
+          }
+
+          if (!inserted) {
+            notificaciones.appendChild(notification);
+          }
+        } else {
+          // Mensaje normal (sin prioridad)
+          notificaciones.appendChild(notification);
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
