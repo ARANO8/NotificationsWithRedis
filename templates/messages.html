@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mensajes en Redis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <h1>Notificaciones Recibidas</h1>
+
+    <!-- Mostrar mensajes del sorted set con colores según prioridad -->
+    <ul id="notificaciones-prioridad">
+      {% for message in sorted_set_messages %}
+        <li style="color: {% if message.prioridad <= 3 %}red{% elif message.prioridad <= 7 %}orange{% else %}green{% endif %};">
+          {{ message.mensaje }} (Prioridad: {{ message.prioridad }})
+        </li>
+      {% endfor %}
+    </ul>
+
+    <!-- Mostrar mensajes de la lista -->
+    <ul id="notificaciones-lista">
+      {% for message in list_messages %}
+        <li>{{ message.mensaje }}</li>
+      {% endfor %}
+    </ul>
+
+    <br />
+    <a href="/">Volver a la página principal</a>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>

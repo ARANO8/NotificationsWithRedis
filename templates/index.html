@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificaciones en Tiempo Real</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Enviar Notificación</h1>
+    <input type="text" id="mensaje" placeholder="Escribe tu mensaje...">
+    <button onclick="enviarMensajeLista()">Enviar a Lista</button>
+
+    <!-- Nuevo formulario para enviar notificaciones con prioridad -->
+    <h2>Enviar Notificación con Prioridad</h2>
+    <input type="text" id="mensaje_prioridad" placeholder="Escribe tu mensaje con prioridad...">
+    <input type="number" id="prioridad" placeholder="Prioridad (1-10)">
+    <button onclick="enviarMensajeConPrioridad()">Enviar</button>
+    
+
+    <!-- Agregar un enlace o botón para ver los mensajes almacenados en Redis -->
+    <br><br>
+    <a href="/messages"><button>Ver Mensajes Almacenados</button></a>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        // Conectar al servidor de WebSocket usando el origen actual
+        var socket = io.connect(window.location.origin);
+
+
+        function enviarMensajeLista() {
+            const mensaje = document.getElementById("mensaje").value;
+
+            if (mensaje.trim() === "") {
+                alert("Por favor, ingrese un mensaje.");
+                return;
+            }
+
+            fetch("/send_normal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: mensaje })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Mensaje enviado a la lista:", data);
+                document.getElementById("mensaje").value = "";
+            })
+            .catch(error => console.error("Error al enviar el mensaje a la lista:", error));
+        }
+
+        function enviarMensajeConPrioridad() {
+            const mensaje = document.getElementById("mensaje_prioridad").value;
+            const prioridad = document.getElementById("prioridad").value;
+
+            if (mensaje.trim() === "") {
+                alert("Por favor, ingrese un mensaje.");
+                return;
+            }
+
+            if (prioridad.trim() === "" || isNaN(prioridad) || prioridad < 1 || prioridad > 10) {
+                alert("Por favor, ingrese una prioridad válida (1-10).");
+                return;
+            }
+
+            fetch("/send_priority", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: mensaje, priority: parseInt(prioridad) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Mensaje enviado con prioridad:", data);
+                document.getElementById("mensaje_prioridad").value = "";
+                document.getElementById("prioridad").value = "";
+            })
+            .catch(error => console.error("Error al enviar el mensaje con prioridad:", error));
+        }
+    </script>
+</body>
+</html>
